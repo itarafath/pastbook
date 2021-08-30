@@ -37,7 +37,7 @@ class FacebookService
         $since = Carbon::parse('01-01-2018')->timestamp;
         $until = Carbon::now()->timestamp;
 
-
+        // we can not retrieve the images without business verification
         $sdk_query = $this->fb->get("me/albums", $token);
 
         return $sdk_query->getGraphEdge();
