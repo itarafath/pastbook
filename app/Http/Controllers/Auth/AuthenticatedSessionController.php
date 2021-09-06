@@ -47,10 +47,10 @@ class AuthenticatedSessionController extends Controller
             Auth::login($user);
         }
 
-        dd($this->facebookService->getImages($facebook_user->token));
+//        dd($this->facebookService->getImages($facebook_user->token));
 
 
-//        return redirect()->route('home');
+        return redirect()->route('home');
     }
 
     /**
