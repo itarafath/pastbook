@@ -6,12 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Models\User;
 use App\Providers\RouteServiceProvider;
+use App\Repositories\ImagesReposotory;
+use App\Repositories\UserRepository;
 use App\Services\FacebookService;
-use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Laravel\Socialite\Facades\Socialite;
+use Laravel\Socialite\Two\InvalidStateException;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -30,27 +32,28 @@ class AuthenticatedSessionController extends Controller
         return Socialite::driver('facebook')->redirect();
     }
 
-    public function callback()
+    public function callback(UserRepository $userRepository, ImagesReposotory $imageRepository): RedirectResponse
     {
-        $facebook_user = Socialite::driver('facebook')->user();
-        $user = User::where('facebook_id', $facebook_user->getId())->first();
-        if ($user) {
-            Auth::login($user);
-        } else {
-            $user = User::create([
-                'name' => $facebook_user->getName(),
-                'email' => $facebook_user->getEmail(),
-                'password' => Hash::make('password'),
-                'facebook_id' => $facebook_user->getId(),
-            ]);
+        try {
+            $facebook_user = Socialite::driver('facebook')->user();
+            $user = User::where('facebook_id', $facebook_user->getId())->first();
 
-            Auth::login($user);
+            // dd($this->facebookService->getImages($facebook_user->token));
+            $facebookImages = $this->facebookService->getDummyImages();
+
+            if ($user) {
+                Auth::login($user);
+            } else {
+                $user = $userRepository->insert($facebook_user);
+                $imageRepository->insert($facebookImages);
+
+                Auth::login($user);
+            }
+
+            return redirect()->route('dashboard');
+        } catch (InvalidStateException $e) {
+            return back();
         }
-
-//        dd($this->facebookService->getImages($facebook_user->token));
-
-
-        return redirect()->route('home');
     }
 
     /**

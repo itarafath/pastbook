@@ -6,3 +6,7 @@
 - Add the Facebook app id to .env
 - *php artisan migrate*
 - open browser and go http://localhost
+
+
+Note : if you had any permission issue :
+*chmod -R 0777 ./storage/logs*
